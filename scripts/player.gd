@@ -9,6 +9,8 @@ var visibility: float = 1.0
 var move_dir: Vector2 = Vector2.ZERO
 var blink_tween: Tween
 
+var footsteps_delay = 0.3
+var footsteps_cooldown = 0.0
 
 func _init() -> void:
 	speed = WALK_SPEED
@@ -30,10 +32,14 @@ func _process(delta: float) -> void:
 	squash = 0.88 if sneaking else 1.0
 
 	moving = dir != Vector2.ZERO
+	footsteps_cooldown -= delta
 	if moving:
 		move_dir = dir.normalized()
 		facing = move_dir
 		try_move(move_dir * speed * delta)
+		if footsteps_cooldown <= 0:
+			AudioManager.play_sfx(preload("res://audio/footsteps.wav"), randf_range(0.8, 1.2))
+			footsteps_cooldown = footsteps_delay
 	else:
 		move_dir = Vector2.ZERO
 	queue_redraw()

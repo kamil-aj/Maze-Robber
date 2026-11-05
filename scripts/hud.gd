@@ -205,10 +205,20 @@ func _button(text: String, cb: Callable) -> Button:
 	var b := Button.new()
 	b.text = text
 	b.custom_minimum_size = Vector2(0, 42)
+	
+	b.mouse_entered.connect(func():
+		AudioManager.play_sfx(preload("res://audio/button_hover.wav"))
+	)
+	
+	b.pressed.connect(func():
+		AudioManager.play_sfx(preload("res://audio/button_click.wav"), 0.75)
+	)
+	
 	b.pressed.connect(cb)
 	box.add_child(b)
 	return b
 
+var previous_menu: String = "main"
 
 func show_menu() -> void:
 	_show_panel()
@@ -219,9 +229,65 @@ func show_menu() -> void:
 	var cont := _button("Continue", world.load_game)
 	cont.disabled = not SaveManager.has_save()
 	_button("How to Play", show_help)
+	_button("Settings", func():
+		previous_menu = "main"
+		show_settings()
+	)
 	_button("Quit", func(): get_tree().quit())
 	first.grab_focus()
 
+func _set_bus_volume(bus_name: String, value: float) -> void:
+	var bus_index := AudioServer.get_bus_index(bus_name)
+
+	AudioServer.set_bus_volume_db(
+		bus_index,
+		linear_to_db(maxf(value / 100.0, 0.0001))
+	)
+
+	AudioServer.set_bus_mute(bus_index, value <= 0.0)
+
+
+func _volume_slider(label_text: String, bus_name: String) -> void:
+	var label := Label.new()
+	label.text = label_text
+	box.add_child(label)
+
+	var slider := HSlider.new()
+	slider.min_value = 0
+	slider.max_value = 100
+	slider.step = 1
+
+	var bus_index := AudioServer.get_bus_index(bus_name)
+
+	slider.value = 0 if AudioServer.is_bus_mute(bus_index) else (
+		db_to_linear(AudioServer.get_bus_volume_db(bus_index)) * 100.0
+	)
+
+	slider.value_changed.connect(
+		func(value):
+			_set_bus_volume(bus_name, value)
+	)
+
+	box.add_child(slider)
+
+func show_settings() -> void:
+	_show_panel()
+	_title("SETTINGS")
+
+	_volume_slider("MASTER VOLUME", "Master")
+	_volume_slider("MUSIC VOLUME", "Music")
+	_volume_slider("SFX VOLUME", "SFX")
+
+	_gap()
+
+	var back := _button("Back", go_back)
+	back.grab_focus()
+
+func go_back() -> void:
+	if previous_menu == "main":
+		show_menu()
+	elif previous_menu == "pause":
+		show_pause()
 
 func show_help() -> void:
 	_show_panel()
@@ -240,6 +306,10 @@ func show_pause() -> void:
 	_title("PAUSED")
 	var first := _button("Resume", world.resume)
 	_button("Save Game  (F5)", world.save_game)
+	_button("Settings", func():
+		previous_menu = "pause"
+		show_settings()
+	)
 	_button("Main Menu", world.go_menu)
 	first.grab_focus()
 
