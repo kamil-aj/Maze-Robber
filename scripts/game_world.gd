@@ -407,15 +407,33 @@ func save_game() -> void:
 		"level_start_score": level_start_score,
 		"run_time": run_time,
 		"level_time": level_time,
+		"volumes": {
+			"Master": AudioServer.get_bus_volume_db(AudioServer.get_bus_index("Master")),
+			"Music": AudioServer.get_bus_volume_db(AudioServer.get_bus_index("Music")),
+			"SFX": AudioServer.get_bus_volume_db(AudioServer.get_bus_index("SFX"))
+		}
 	}
 	hud.toast("Game saved" if SaveManager.save(data) else "Could not save the game")
 
+func load_volume_settings(data: Dictionary) -> void:
+	if not data.has("volumes"):
+		return
+
+	for bus_name in data["volumes"]:
+		var bus_index := AudioServer.get_bus_index(bus_name)
+
+		if bus_index != -1:
+			AudioServer.set_bus_volume_db(
+				bus_index,
+				float(data["volumes"][bus_name])
+			)
 
 func load_game() -> void:
 	var data := SaveManager.load_data()
 	if not SaveManager.is_valid(data):
 		hud.toast("No usable save file found")
 		return
+	load_volume_settings(data)
 	_setup_level(int(data["level"]), data)
 	score = int(data["score"])
 	level_start_score = int(data["level_start_score"])
