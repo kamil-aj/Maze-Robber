@@ -314,6 +314,7 @@ func _collect(coin: Coin) -> void:
 		exit_open = true
 		queue_redraw()
 		hud.toast("All loot taken. Get to the exit!")
+		AudioManager.play_sfx(preload("res://audio/exit_open.wav"))
 
 
 func _clear_level() -> void:
@@ -325,6 +326,7 @@ func _clear_level() -> void:
 	else:
 		state = State.CLEARED
 		hud.show_cleared()
+	AudioManager.play_sfx(preload("res://audio/success_exit.wav"))
 
 
 func player_caught(by: Guard) -> void:
@@ -333,6 +335,7 @@ func player_caught(by: Guard) -> void:
 	state = State.LOST
 	caught_by = by.get_label()
 	hud.show_lost()
+	AudioManager.play_sfx(preload("res://audio/player_caught.wav"))
 
 
 func load_level(index: int) -> void:
@@ -347,6 +350,14 @@ func load_level(index: int) -> void:
 		if state == State.PLAYING and level_index == idx:
 			hud.toast(tip, 3.5))
 
+func play_background_audio() -> void:
+	AudioManager.play_music(preload("res://audio/background_music.wav"))
+
+func pause_background_audio() -> void:
+	AudioManager.pause_music()
+
+func resume_background_audio() -> void:
+	AudioManager.resume_music()
 
 func _begin_play() -> void:
 	grace_left = GRACE_TIME
@@ -354,6 +365,7 @@ func _begin_play() -> void:
 	state = State.PLAYING
 	hud.hide_panel()
 	hud.update_stats()
+	play_background_audio()
 
 
 func start_new_game() -> void:
@@ -374,11 +386,13 @@ func next_level() -> void:
 func go_menu() -> void:
 	state = State.MENU
 	hud.show_menu()
+	pause_background_audio()
 
 
 func resume() -> void:
 	state = State.PLAYING
 	hud.hide_panel()
+	resume_background_audio()
 
 
 func save_game() -> void:
@@ -417,6 +431,7 @@ func _unhandled_input(event: InputEvent) -> void:
 	match event.keycode:
 		KEY_ESCAPE, KEY_P:
 			if state == State.PLAYING:
+				pause_background_audio()
 				state = State.PAUSED
 				hud.show_pause()
 			elif state == State.PAUSED:

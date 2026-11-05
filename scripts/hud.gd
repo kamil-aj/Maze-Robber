@@ -205,6 +205,15 @@ func _button(text: String, cb: Callable) -> Button:
 	var b := Button.new()
 	b.text = text
 	b.custom_minimum_size = Vector2(0, 42)
+	
+	b.mouse_entered.connect(func():
+		AudioManager.play_sfx(preload("res://audio/button_hover.wav"))
+	)
+	
+	b.pressed.connect(func():
+		AudioManager.play_sfx(preload("res://audio/button_click.wav"), 0.75)
+	)
+	
 	b.pressed.connect(cb)
 	box.add_child(b)
 	return b

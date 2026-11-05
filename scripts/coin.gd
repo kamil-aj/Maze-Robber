@@ -67,3 +67,6 @@ func collect(points: int) -> void:
 	t.tween_property(self, "scale", Vector2(2.0, 2.0), 0.18)
 	t.tween_property(self, "modulate:a", 0.0, 0.18)
 	t.chain().tween_callback(queue_free)
+	
+	print("COIN COLLECTED HELL YEAA")
+	AudioManager.play_sfx(preload("res://audio/collect_coin.wav"), randf_range(0.95, 1.05))
